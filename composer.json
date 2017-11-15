@@ -1,0 +1,22 @@
+{
+    "name": "takeawaytown/restaurants",
+    "type": "library",
+    "require": {
+        "laravel/framework": "~5.4",
+        "php": ">=5.6.4"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "~4.1",
+        "mockery/mockery": "dev-master",
+        "illuminate/database": "~5.0",
+        "orchestra/testbench": "3.4.*@dev"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Alex Scott",
+            "email": "codetheorist@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev"
+}
