@@ -5,22 +5,12 @@ namespace TakeawayTown\Restaurants\Traits;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Config;
-use Mpociot\Teamwork\Events\UserJoinedTeam;
-use Mpociot\Teamwork\Events\UserLeftTeam;
-use Mpociot\Teamwork\Exceptions\UserNotInTeamException;
+use TakeawayTown\Restaurants\Events\UserJoinedRestaurant;
+use TakeawayTown\Restaurants\Events\UserLeftRestaurant;
+use TakeawayTown\Restaurants\Exceptions\UserNotInRestaurantException;
 
 trait UserHasTeams
 {
-    /**
-     * Many-to-Many relations with the user model.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
-     */
-    public function teams()
-    {
-        return $this->belongsToMany( Config::get( 'restaurants.team_model' ),Config::get( 'restaurants.team_user_table' ), 'user_id', 'team_id' )->withTimestamps();
-    }
-
     /**
      * Many-to-Many relations with the user model.
      *
@@ -85,17 +75,7 @@ trait UserHasTeams
      */
     public function isOwner()
     {
-        return ( $this->teams()->where( "owner_id", "=", $this->getKey() )->first() ) ? true : false;
-    }
-
-    /**
-     * Returns if the user owns a team
-     *
-     * @return bool
-     */
-    public function isTeamOwner()
-    {
-        return ( $this->teams()->where( "owner_id", "=", $this->getKey() )->first() ) ? true : false;
+        return ( $this->restaurants()->where( "owner_id", "=", $this->getKey() )->first() ) ? true : false;
     }
 
     /**
@@ -105,28 +85,11 @@ trait UserHasTeams
      */
     public function isRestaurantOwner()
     {
-        return ( $this->restaurants()->where( "owner_id", "=", $this->getKey() )->first() ) ? true : false;
+        return $this->isOwner();
     }
 
     /**
-     * @param $team
-     * @return mixed
-     */
-    protected function retrieveTeamId( $team )
-    {
-        if ( is_object( $team ) )
-        {
-            $team = $team->getKey();
-        }
-        if ( is_array( $team ) && isset( $team[ "id" ] ) )
-        {
-            $team = $team[ "id" ];
-        }
-        return $team;
-    }
-
-    /**
-     * @param $team
+     * @param $restaurant
      * @return mixed
      */
     protected function retrieveRestaurantId( $restaurant )
@@ -143,9 +106,9 @@ trait UserHasTeams
     }
 
     /**
-     * Returns if the user owns the given team
+     * Returns if the user owns the given restaurant
      *
-     * @param mixed $team
+     * @param mixed $restaurant
      * @return bool
      */
     public function isOwnerOfRestaurant( $restaurant )
@@ -158,65 +121,9 @@ trait UserHasTeams
     }
 
     /**
-     * Returns if the user owns the given team
-     *
-     * @param mixed $team
-     * @return bool
-     */
-    public function isOwnerOfTeam( $team )
-    {
-        $team_id        = $this->retrieveTeamId( $team );
-        return ( $this->teams()
-            ->where('owner_id', $this->getKey())
-            ->where('team_id', $team_id)->first()
-        ) ? true : false;
-    }
-
-    /**
      * Alias to eloquent many-to-many relation's attach() method.
      *
-     * @param mixed $team
-     * @param array $pivotData
-     * @return $this
-     */
-    public function attachTeam( $team, $pivotData = [] )
-    {
-        $team        = $this->retrieveTeamId( $team );
-        /**
-         * If the user has no current team,
-         * use the attached one
-         */
-        if( is_null( $this->current_team_id ) )
-        {
-            $this->current_team_id = $team;
-            $this->save();
-
-            if( $this->relationLoaded('currentTeam') ) {
-                $this->load('currentTeam');
-            }
-
-        }
-
-        // Reload relation
-        $this->load('teams');
-
-        if( !$this->teams->contains( $team ) )
-        {
-            $this->teams()->attach( $team, $pivotData );
-
-            event(new UserJoinedTeam($this, $team));
-
-            if( $this->relationLoaded('teams') ) {
-                $this->load('teams');
-            }
-        }
-        return $this;
-    }
-
-    /**
-     * Alias to eloquent many-to-many relation's attach() method.
-     *
-     * @param mixed $team
+     * @param mixed $restaurant
      * @param array $pivotData
      * @return $this
      */
@@ -257,41 +164,7 @@ trait UserHasTeams
     /**
      * Alias to eloquent many-to-many relation's detach() method.
      *
-     * @param mixed $team
-     * @return $this
-     */
-    public function detachTeam( $team )
-    {
-        $team        = $this->retrieveTeamId( $team );
-        $this->teams()->detach( $team );
-
-        event(new UserLeftTeam($this, $team));
-
-        if( $this->relationLoaded('teams') ) {
-            $this->load('teams');
-        }
-
-        /**
-         * If the user has no more teams,
-         * unset the current_team_id
-         */
-        if( $this->teams()->count() === 0 || $this->current_team_id === $team )
-        {
-            $this->current_team_id = null;
-            $this->save();
-
-            if( $this->relationLoaded('currentTeam') ) {
-                $this->load('currentTeam');
-            }
-
-        }
-        return $this;
-    }
-
-    /**
-     * Alias to eloquent many-to-many relation's detach() method.
-     *
-     * @param mixed $team
+     * @param mixed $restaurant
      * @return $this
      */
     public function detachRestaurant( $restaurant )
@@ -306,8 +179,8 @@ trait UserHasTeams
         }
 
         /**
-         * If the user has no more teams,
-         * unset the current_team_id
+         * If the user has no more restaurants,
+         * unset the current_restaurant_id
          */
         if( $this->restaurants()->count() === 0 || $this->current_restaurant_id === $restaurant )
         {
@@ -323,24 +196,9 @@ trait UserHasTeams
     }
 
     /**
-     * Attach multiple teams to a user
+     * Attach multiple restaurants to a user
      *
-     * @param mixed $teams
-     * @return $this
-     */
-    public function attachTeams( $teams )
-    {
-        foreach ( $teams as $team )
-        {
-            $this->attachTeam( $team );
-        }
-        return $this;
-    }
-
-    /**
-     * Attach multiple teams to a user
-     *
-     * @param mixed $teams
+     * @param mixed $restaurants
      * @return $this
      */
     public function attachRestaurants( $restaurants )
@@ -353,27 +211,12 @@ trait UserHasTeams
     }
 
     /**
-     * Detach multiple teams from a user
+     * Detach multiple restaurants from a user
      *
-     * @param mixed $teams
+     * @param mixed $restaurants
      * @return $this
      */
-    public function detachTeams( $teams )
-    {
-        foreach ( $teams as $team )
-        {
-            $this->detachTeam( $team );
-        }
-        return $this;
-    }
-
-    /**
-     * Detach multiple teams from a user
-     *
-     * @param mixed $teams
-     * @return $this
-     */
-    public function detachRestaurant( $restaurants )
+    public function detachRestaurants( $restaurants )
     {
         foreach ( $restaurants as $restaurant )
         {
@@ -383,47 +226,9 @@ trait UserHasTeams
     }
 
     /**
-     * Switch the current team of the user
-     *
-     * @param object|array|integer $team
-     * @return $this
-     * @throws ModelNotFoundException
-     * @throws UserNotInTeamException
-     */
-    public function switchTeam( $team )
-    {
-        if( $team !== 0 && $team !== null )
-        {
-            $team        = $this->retrieveTeamId( $team );
-            $teamModel   = Config::get( 'teamwork.team_model' );
-            $teamObject  = ( new $teamModel() )->find( $team );
-            if( !$teamObject )
-            {
-                $exception = new ModelNotFoundException();
-                $exception->setModel( $teamModel );
-                throw $exception;
-            }
-            if( !$teamObject->users->contains( $this->getKey() ) )
-            {
-                $exception = new UserNotInTeamException();
-                $exception->setTeam( $teamObject->name );
-                throw $exception;
-            }
-        }
-        $this->current_team_id = $team;
-        $this->save();
-
-        if( $this->relationLoaded('currentTeam') ) {
-            $this->load('currentTeam');
-        }
-
-        return $this;
-    }
-
-    /**
      * Switch the current restaurant of the user
      *
-     * @param object|array|integer $team
+     * @param object|array|integer $restaurant
      * @return $this
      * @throws ModelNotFoundException
      * @throws UserNotInTeamException
