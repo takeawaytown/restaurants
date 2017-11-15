@@ -1,0 +1,44 @@
+<?php
+
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
+
+class RestaurantsCreateTeamUserTable extends Migration
+{
+
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        Schema::create(\Config::get( 'restaurants.team_user_table' ), function ( Blueprint $table )
+        {
+            $table->integer( 'user_id' )->unsigned();
+            $table->integer( 'team_id' )->unsigned();
+            $table->timestamps();
+
+            $table->foreign( 'user_id' )
+                ->references( \Config::get( 'restaurants.user_foreign_key' ) )
+                ->on( \Config::get( 'restaurants.users_table' ) )
+                ->onUpdate( 'cascade' )
+                ->onDelete( 'cascade' );
+
+            $table->foreign( 'team_id' )
+                ->references( 'id' )
+                ->on( \Config::get( 'restaurants.teams_table' ) )
+                ->onDelete( 'cascade' );
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        Schema::drop(\Config::get('restaurants.team_user_table'));
+    }
+}

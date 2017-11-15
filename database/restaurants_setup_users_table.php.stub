@@ -1,0 +1,36 @@
+<?php
+
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
+
+class RestaurantsSetupUsersTable extends Migration
+{
+
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        Schema::table(\Config::get( 'restaurants.users_table' ), function ( Blueprint $table )
+        {
+            $table->integer( 'current_restaurant_id' )->unsigned()->nullable();
+        });
+
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        Schema::table(\Config::get( 'restaurants.users_table' ), function(Blueprint $table)
+        {
+            $table->dropColumn('current_restaurant_id');
+        });
+
+    }
+}
