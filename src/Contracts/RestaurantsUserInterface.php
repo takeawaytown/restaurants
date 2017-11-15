@@ -129,13 +129,4 @@ interface RestaurantsUserInterface
      * @throws UserNotInTeamException
      */
     public function switchRestaurant( $restaurant );
-
-    /**
-     * Switch the current team of the user
-     *
-     * @param object|array|integer $team
-     * @throws ModelNotFoundException
-     * @throws UserNotInTeamException
-     */
-    public function switchTeam( $team );
 }
