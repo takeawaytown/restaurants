@@ -9,7 +9,7 @@ return [
     'users_table' => 'users',
     'restaurants_table' => 'restaurants',
     'teams_table' => 'teams',
-    'restaurant_invites_table' => 'restaurant_invites',
+    'invites_table' => 'invites',
 
     'restaurant_user_table' => 'restaurant_user',
     'team_user_table' => 'team_user',
