@@ -2,7 +2,7 @@
 
 return [
     'invite_model' => TakeawayTown\Restaurants\Invite::class,
-    'restaurant_model' => TakeawayTown\Restaurants\Team::class,
+    'restaurant_model' => TakeawayTown\Restaurants\Restaurant::class,
     'team_model' => TakeawayTown\Restaurants\Team::class,
     'user_model' => config('auth.providers.users.model', App\User::class),
 
